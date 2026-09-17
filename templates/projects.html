@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Projects — Ticketing{% endblock %}
+{% block page_title %}Projects{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <div>
+        {% for p in projects %}
+        <div class="card card-pad" style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div>
+                    <span class="proj-key" style="background:var(--primary);color:#fff;">{{ p.key }}</span>
+                    <strong style="font-size:15px;margin-left:6px;">{{ p.name }}</strong>
+                    <p class="muted" style="margin-top:6px;">{{ p.description or 'No description.' }}</p>
+                    <p class="muted" style="font-size:12px;margin-top:6px;">
+                        {{ p.issues|length }} issue(s) · created {{ p.created_date.strftime('%b %d, %Y') }}
+                    </p>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <a class="btn btn-sm" href="{{ url_for('issues.list_issues', project=p.id) }}">View</a>
+                    <a class="btn btn-sm btn-primary" href="{{ url_for('issues.create', project=p.id) }}">+ Issue</a>
+                    <form class="inline-form" method="post" action="{{ url_for('projects.delete', project_id=p.id) }}"
+                          onsubmit="return confirm('Delete project {{ p.key }} and ALL its issues?');">
+                        <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty">No projects yet. Create one on the right →</div>
+        {% endfor %}
+    </div>
+
+    <div>
+        <div class="card card-pad">
+            <div class="card-title">New Project</div>
+            <form method="post" action="{{ url_for('projects.create') }}">
+                <div class="form-row">
+                    <label>Project Name *</label>
+                    <input type="text" name="name" required placeholder="e.g. Homelab">
+                </div>
+                <div class="form-row">
+                    <label>Project Key * (used for IDs like DEV-1)</label>
+                    <input type="text" name="key" required maxlength="10" placeholder="e.g. HOME" style="text-transform:uppercase;">
+                </div>
+                <div class="form-row">
+                    <label>Description</label>
+                    <textarea name="description" style="min-height:80px;"></textarea>
+                </div>
+                <button class="btn btn-primary" type="submit">Create Project</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}{{ issue.issue_key }} — {{ issue.title }}{% endblock %}
+{% block page_title %}{{ issue.issue_key }}{% endblock %}
+
+{% block content %}
+<div class="issue-head">
+    <div>
+        <span class="type-tag">{{ issue.issue_type }}</span>
+        <h1 class="issue-title">{{ issue.title }}</h1>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <a href="{{ url_for('issues.edit', issue_key=issue.issue_key) }}" class="btn btn-sm">Edit</a>
+        <form class="inline-form" method="post" action="{{ url_for('issues.delete', issue_key=issue.issue_key) }}"
+              onsubmit="return confirm('Delete {{ issue.issue_key }}?');">
+            <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+        </form>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <!-- Left column: description, comments, activity -->
+    <div>
+        <div class="card card-pad">
+            <div class="card-title">Description</div>
+            <div>{{ issue.description or 'No description.' | safe }}</div>
+        </div>
+
+        <div class="card card-pad" style="margin-top:16px;">
+            <div class="card-title">Personal Notes</div>
+            <div class="muted">{{ issue.notes or 'No private notes.' }}</div>
+        </div>
+
+        <!-- Time tracking -->
+        <div class="card card-pad" style="margin-top:16px;">
+            <div class="card-title">Time Tracking</div>
+            <p>Estimated: <strong>{{ issue.estimated_minutes|duration }}</strong>
+               &nbsp;•&nbsp; Actual: <strong>{{ issue.actual_minutes|duration }}</strong></p>
+            <form method="post" action="{{ url_for('issues.add_time', issue_key=issue.issue_key) }}"
+                  style="display:flex;gap:8px;margin-top:10px;">
+                <input type="text" name="time" placeholder="e.g. 1h 30m or 45" style="flex:0 0 160px;">
+                <input type="text" name="note" placeholder="What did you work on?" style="flex:1;">
+                <button class="btn btn-sm btn-primary" type="submit">Log time</button>
+            </form>
+            {% if issue.time_entries %}
+            <ul style="list-style:none;margin-top:12px;">
+                {% for t in issue.time_entries %}
+                <li class="muted" style="padding:4px 0;">{{ t.minutes|duration }} — {{ t.note or 'no note' }}
+                    <span style="float:right;">{{ t.started_at.strftime('%b %d, %Y') }}</span></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+
+        <!-- Attachments -->
+        <div class="card card-pad" style="margin-top:16px;">
+            <div class="card-title">Attachments</div>
+            {% if issue.attachments %}
+            <ul style="list-style:none;">
+                {% for a in issue.attachments %}
+                <li style="padding:5px 0;">📎 <a href="{{ url_for('issues.download_attachment', att_id=a.id) }}">{{ a.original_name }}</a>
+                    <span class="muted">({{ (a.size_bytes/1024)|round(1) }} KB)</span></li>
+                {% endfor %}
+            </ul>
+            {% else %}<p class="muted">No attachments.</p>{% endif %}
+            <form method="post" action="{{ url_for('issues.attach', issue_key=issue.issue_key) }}"
+                  enctype="multipart/form-data" style="margin-top:10px;display:flex;gap:8px;">
+                <input type="file" name="file" style="flex:1;">
+                <button class="btn btn-sm" type="submit">Upload</button>
+            </form>
+        </div>
+
+        <!-- Comments -->
+        <div class="card card-pad" id="comments" style="margin-top:16px;">
+            <div class="card-title">Comments</div>
+            {% for c in issue.comments %}
+            <div class="comment">
+                <div><span class="who">{{ c.author }}</span>
+                     <span class="when">— {{ c.created_date.strftime('%b %d, %Y %H:%M') }}</span></div>
+                <div style="margin-top:6px;">{{ c.body }}</div>
+            </div>
+            {% else %}<p class="muted">No comments yet.</p>{% endfor %}
+            <form method="post" action="{{ url_for('issues.add_comment', issue_key=issue.issue_key) }}" style="margin-top:12px;">
+                <textarea name="body" placeholder="Add a comment…" style="width:100%;min-height:70px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);"></textarea>
+                <button class="btn btn-sm btn-primary" type="submit" style="margin-top:8px;">Comment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right column: metadata + activity -->
+    <div>
+        <div class="card card-pad">
+            <ul class="meta-list">
+                <li><span class="k">Status</span>
+                    <form class="inline-form" method="post" action="{{ url_for('issues.change_status', issue_key=issue.issue_key) }}">
+                        <select name="status" onchange="this.form.submit()" style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);">
+                            {% for s in statuses %}<option value="{{ s }}" {% if issue.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                        </select>
+                    </form>
+                </li>
+                <li><span class="k">Priority</span><span class="prio prio-{{ issue.priority }}">{{ issue.priority }}</span></li>
+                <li><span class="k">Type</span><span>{{ issue.issue_type }}</span></li>
+                <li><span class="k">Project</span><span>{{ issue.project.key }} — {{ issue.project.name }}</span></li>
+                <li><span class="k">Assignee</span><span>{{ issue.assignee }}</span></li>
+                <li><span class="k">Parent</span><span>{% if issue.parent %}<a href="{{ url_for('issues.detail', issue_key=issue.parent.issue_key) }}">{{ issue.parent.issue_key }}</a>{% else %}—{% endif %}</span></li>
+                <li><span class="k">Due</span><span>{% if issue.due_date %}{{ issue.due_date.strftime('%b %d, %Y') }}{% else %}—{% endif %}</span></li>
+                <li><span class="k">Resolution</span><span>{{ issue.resolution or '—' }}</span></li>
+                <li><span class="k">Created</span><span>{{ issue.created_date.strftime('%b %d, %Y') }}</span></li>
+                <li><span class="k">Updated</span><span>{{ issue.updated_date.strftime('%b %d, %Y') }}</span></li>
+            </ul>
+            <div style="margin-top:12px;">
+                {% for l in issue.labels %}<span class="label-chip">{{ l.name }}</span>{% endfor %}
+            </div>
+        </div>
+
+        {% if issue.children %}
+        <div class="card card-pad" style="margin-top:16px;">
+            <div class="card-title">Sub-issues</div>
+            <ul style="list-style:none;">
+                {% for ch in issue.children %}
+                <li style="padding:4px 0;"><a href="{{ url_for('issues.detail', issue_key=ch.issue_key) }}" class="issue-key">{{ ch.issue_key }}</a> {{ ch.title }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="card card-pad" style="margin-top:16px;">
+            <div class="card-title">Activity</div>
+            <ul class="activity">
+                {% for a in issue.activities %}
+                <li>{{ a.action }} <span class="when" style="display:block;font-size:11px;">{{ a.created_date.strftime('%b %d, %Y %H:%M') }}</span></li>
+                {% else %}<li class="muted">No activity.</li>{% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Local data — never commit your personal tickets / attachments / backups
+data/*.db
+data/attachments/
+data/backups/
+
+# OS
+Thumbs.db
+.DS_Store

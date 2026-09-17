@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Settings — Ticketing{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <div class="card card-pad">
+        <div class="card-title">Backup & Export</div>
+        <p class="muted" style="margin-bottom:14px;">Create local copies of your data. Nothing is uploaded anywhere.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;max-width:280px;">
+            <a class="btn btn-primary" href="{{ url_for('main.backup_database') }}">💾 Backup Database (.db)</a>
+            <a class="btn" href="{{ url_for('main.export_json') }}">⬇ Export Issues (JSON)</a>
+            <a class="btn" href="{{ url_for('main.export_csv') }}">⬇ Export Issues (CSV)</a>
+        </div>
+
+        <div class="card-title" style="margin-top:22px;">Import</div>
+        <form method="post" action="{{ url_for('main.import_json') }}" enctype="multipart/form-data"
+              style="display:flex;gap:8px;margin-top:8px;max-width:360px;">
+            <input type="file" name="file" accept=".json" style="flex:1;">
+            <button class="btn btn-sm" type="submit">Import JSON</button>
+        </form>
+    </div>
+
+    <div class="card card-pad">
+        <div class="card-title">About this installation</div>
+        <ul class="meta-list">
+            <li><span class="k">Issues</span><span>{{ issue_count }}</span></li>
+            <li><span class="k">Projects</span><span>{{ project_count }}</span></li>
+            <li><span class="k">Bind address</span><span>127.0.0.1 (localhost only)</span></li>
+        </ul>
+        <div class="card-title" style="margin-top:20px;">Storage locations</div>
+        <p class="muted" style="font-size:12.5px;word-break:break-all;">
+            <strong>Database:</strong><br>{{ db_path }}<br><br>
+            <strong>Attachments:</strong><br>{{ attachments_dir }}<br><br>
+            <strong>Backups:</strong><br>{{ backup_dir }}
+        </p>
+        <p class="muted" style="margin-top:14px;font-size:12px;">
+            🔒 This app binds only to localhost, stores everything locally, sends no telemetry,
+            and requires no internet connection after install.
+        </p>
+    </div>
+</div>
+{% endblock %}

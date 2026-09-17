@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit ' + issue.issue_key if issue else 'New Issue' }} — Ticketing{% endblock %}
+{% block page_title %}{{ 'Edit ' + issue.issue_key if issue else 'Create Issue' }}{% endblock %}
+
+{% block content %}
+<form method="post">
+<div class="form-grid">
+    <!-- Main fields -->
+    <div>
+        <div class="card card-pad">
+            <div class="form-row">
+                <label>Title *</label>
+                <input type="text" name="title" required value="{{ issue.title if issue else '' }}" placeholder="Short summary of the work">
+            </div>
+            <div class="form-row">
+                <label>Description</label>
+                <textarea name="description" placeholder="Details, steps, context…">{{ issue.description if issue else '' }}</textarea>
+            </div>
+            <div class="form-row">
+                <label>Personal Notes (private)</label>
+                <textarea name="notes" style="min-height:80px;" placeholder="Private notes, only stored locally">{{ issue.notes if issue else '' }}</textarea>
+            </div>
+            <div class="form-row">
+                <label>Labels (comma-separated)</label>
+                <input type="text" name="labels" value="{{ issue.labels|map(attribute='name')|join(', ') if issue else '' }}" placeholder="backend, bug, learning">
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar fields -->
+    <div>
+        <div class="card card-pad">
+            <div class="form-row">
+                <label>Project *</label>
+                <select name="project_id" required {% if issue %}disabled{% endif %}>
+                    {% for p in projects %}
+                    <option value="{{ p.id }}"
+                        {% if issue and issue.project_id==p.id %}selected{% elif preselect_project==p.id|string %}selected{% endif %}>
+                        {{ p.key }} — {{ p.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% if issue %}<input type="hidden" name="project_id" value="{{ issue.project_id }}">{% endif %}
+            </div>
+            <div class="form-row">
+                <label>Issue Type</label>
+                <select name="issue_type">
+                    {% for t in types %}<option value="{{ t }}" {% if issue and issue.issue_type==t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Status</label>
+                <select name="status">
+                    {% for s in statuses %}<option value="{{ s }}" {% if issue and issue.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Priority</label>
+                <select name="priority">
+                    {% for p in priorities %}<option value="{{ p }}" {% if (issue and issue.priority==p) or (not issue and p=='Medium') %}selected{% endif %}>{{ p }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Assignee</label>
+                <input type="text" name="assignee" value="{{ issue.assignee if issue else 'Me' }}">
+            </div>
+            <div class="form-row">
+                <label>Due Date</label>
+                <input type="date" name="due_date" value="{{ issue.due_date.strftime('%Y-%m-%d') if issue and issue.due_date else '' }}">
+            </div>
+            <div class="form-row">
+                <label>Estimated Time (e.g. 4h, 90m, 2h 30m)</label>
+                <input type="text" name="estimated_time" value="{{ issue.estimated_minutes|duration if issue and issue.estimated_minutes else '' }}">
+            </div>
+            <div class="form-row">
+                <label>Parent Issue</label>
+                <select name="parent_id">
+                    <option value="">— None —</option>
+                    {% for p in all_issues %}<option value="{{ p.id }}" {% if issue and issue.parent_id==p.id %}selected{% endif %}>{{ p.issue_key }} — {{ p.title[:40] }}</option>{% endfor %}
+                </select>
+            </div>
+            {% if issue %}
+            <div class="form-row">
+                <label>Resolution</label>
+                <select name="resolution">
+                    <option value="">— None —</option>
+                    {% for r in resolutions %}<option value="{{ r }}" {% if issue.resolution==r %}selected{% endif %}>{{ r }}</option>{% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="margin-top:18px;display:flex;gap:10px;">
+    <button class="btn btn-primary" type="submit">{{ 'Save Changes' if issue else 'Create Issue' }}</button>
+    <a class="btn" href="{{ url_for('issues.detail', issue_key=issue.issue_key) if issue else url_for('issues.list_issues') }}">Cancel</a>
+</div>
+</form>
+{% endblock %}

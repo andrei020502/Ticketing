@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Kanban — Ticketing{% endblock %}
+{% block page_title %}Kanban Board{% endblock %}
+
+{% set status_colors = {
+    'Backlog':'var(--c-backlog)','To Do':'var(--c-todo)','In Progress':'var(--c-progress)',
+    'Blocked':'var(--c-blocked)','Testing':'var(--c-testing)','Done':'var(--c-done)'} %}
+
+{% block content %}
+<form method="get" class="filters">
+    <select name="project" onchange="this.form.submit()">
+        <option value="">All projects</option>
+        {% for p in projects %}<option value="{{ p.id }}" {% if selected_project==p.id|string %}selected{% endif %}>{{ p.key }} — {{ p.name }}</option>{% endfor %}
+    </select>
+    <span class="muted">Drag cards between columns to change status.</span>
+</form>
+
+<div class="kanban">
+    {% for status in statuses %}
+    <div class="kanban-col" data-status="{{ status }}">
+        <div class="col-accent" style="background:{{ status_colors.get(status,'var(--border)') }};"></div>
+        <div class="kanban-col-head">
+            <span>{{ status }}</span>
+            <span class="kanban-count">{{ columns[status]|length }}</span>
+        </div>
+        <div class="kanban-cards">
+            {% for i in columns[status] %}
+            <div class="kanban-card" data-key="{{ i.issue_key }}"
+                 onclick="if(!this.classList.contains('dragging'))window.location='{{ url_for('issues.detail', issue_key=i.issue_key) }}'">
+                <div class="kc-key">{{ i.issue_key }} · {{ i.issue_type }}</div>
+                <div class="kc-title">{{ i.title }}</div>
+                <div class="kc-meta">
+                    <span class="prio prio-{{ i.priority }}">{{ i.priority }}</span>
+                    <span class="muted" style="font-size:11px;">{{ i.assignee }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Reports — Ticketing{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% macro bar_chart(data, color) %}
+    {% set maxv = (data.values()|list|max) if data else 1 %}
+    {% for k, v in data.items() %}
+    <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px;">
+            <span>{{ k }}</span><span class="muted">{{ v }}</span>
+        </div>
+        <div class="bar"><span style="width:{{ (v / maxv * 100)|round }}%;background:{{ color }};"></span></div>
+    </div>
+    {% endfor %}
+{% endmacro %}
+
+{% block content %}
+<div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat"><div class="num">{{ total }}</div><div class="lbl">Total Issues</div></div>
+    <div class="stat open"><div class="num">{{ open_count }}</div><div class="lbl">Open</div></div>
+    <div class="stat done"><div class="num">{{ completed }}</div><div class="lbl">Completed</div></div>
+</div>
+
+<div class="grid-2">
+    <div class="card card-pad">
+        <div class="card-title">Issues by Type</div>
+        {{ bar_chart(by_type, 'var(--primary)') }}
+    </div>
+    <div class="card card-pad">
+        <div class="card-title">Issues by Project</div>
+        {{ bar_chart(by_project, 'var(--c-todo)') }}
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top:16px;">
+    <div class="card card-pad">
+        <div class="card-title">Issues by Priority</div>
+        {{ bar_chart(by_priority, 'var(--c-progress)') }}
+    </div>
+    <div class="card card-pad">
+        <div class="card-title">Issues by Status</div>
+        {{ bar_chart(by_status, 'var(--c-testing)') }}
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top:16px;">
+    <div class="card card-pad">
+        <div class="card-title">Completed Over Time (by month)</div>
+        {% if completed_over_time %}{{ bar_chart(completed_over_time, 'var(--c-done)') }}
+        {% else %}<div class="empty">No completed issues yet.</div>{% endif %}
+    </div>
+    <div class="card card-pad">
+        <div class="card-title">Time Spent per Project</div>
+        {% if time_per_project %}
+        <table><tbody>
+            {% for k, v in time_per_project.items() %}
+            <tr><td><span class="proj-key" style="background:var(--surface-2);color:var(--text-muted);">{{ k }}</span></td><td style="text-align:right;font-weight:600;">{{ v }}</td></tr>
+            {% endfor %}
+        </tbody></table>
+        {% else %}<div class="empty">No time logged yet.</div>{% endif %}
+    </div>
+</div>
+{% endblock %}

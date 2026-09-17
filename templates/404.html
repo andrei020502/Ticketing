@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Not Found — Ticketing{% endblock %}
+{% block page_title %}404{% endblock %}
+{% block content %}
+<div class="card card-pad">
+    <div class="empty">
+        <h2 style="font-size:40px;">404</h2>
+        <p>That page or issue does not exist.</p>
+        <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}" style="margin-top:14px;">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

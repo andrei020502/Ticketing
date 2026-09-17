@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Ticketing{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+
+{% macro issue_row(i) %}
+<tr>
+    <td><a href="{{ url_for('issues.detail', issue_key=i.issue_key) }}" class="issue-key">{{ i.issue_key }}</a></td>
+    <td><a href="{{ url_for('issues.detail', issue_key=i.issue_key) }}">{{ i.title }}</a></td>
+    <td><span class="badge status-{{ i.status|replace(' ','-') }}">{{ i.status }}</span></td>
+    <td class="prio prio-{{ i.priority }}">{{ i.priority }}</td>
+    <td>{% if i.due_date %}<span class="{% if i.due_date < now and i.status!='Done' %}overdue{% endif %}">{{ i.due_date.strftime('%b %d, %Y') }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+</tr>
+{% endmacro %}
+
+{% block content %}
+<div class="stat-grid">
+    <div class="stat open"><div class="num">{{ stats.open }}</div><div class="lbl">Open</div></div>
+    <div class="stat progress"><div class="num">{{ stats.in_progress }}</div><div class="lbl">In Progress</div></div>
+    <div class="stat blocked"><div class="num">{{ stats.blocked }}</div><div class="lbl">Blocked</div></div>
+    <div class="stat done"><div class="num">{{ stats.done }}</div><div class="lbl">Done</div></div>
+</div>
+
+<div class="grid-2">
+    <div class="card card-pad">
+        <div class="card-title">🔴 Overdue</div>
+        {% if overdue %}
+        <table><tbody>{% for i in overdue %}{{ issue_row(i) }}{% endfor %}</tbody></table>
+        {% else %}<div class="empty">Nothing overdue. Nice.</div>{% endif %}
+    </div>
+    <div class="card card-pad">
+        <div class="card-title">⚠️ High Priority</div>
+        {% if high_priority %}
+        <table><tbody>{% for i in high_priority %}{{ issue_row(i) }}{% endfor %}</tbody></table>
+        {% else %}<div class="empty">No high-priority open issues.</div>{% endif %}
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top:16px;">
+    <div class="card card-pad">
+        <div class="card-title">🆕 Recently Created</div>
+        {% if recent_created %}
+        <table><tbody>{% for i in recent_created %}{{ issue_row(i) }}{% endfor %}</tbody></table>
+        {% else %}<div class="empty">No issues yet. Create your first one!</div>{% endif %}
+    </div>
+    <div class="card card-pad">
+        <div class="card-title">✏️ Recently Updated</div>
+        {% if recent_updated %}
+        <table><tbody>{% for i in recent_updated %}{{ issue_row(i) }}{% endfor %}</tbody></table>
+        {% else %}<div class="empty">No activity yet.</div>{% endif %}
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top:16px;">
+    <div class="card card-pad">
+        <div class="card-title">⛔ Currently Blocked</div>
+        {% if blocked_issues %}
+        <table><tbody>{% for i in blocked_issues %}{{ issue_row(i) }}{% endfor %}</tbody></table>
+        {% else %}<div class="empty">Nothing blocked.</div>{% endif %}
+    </div>
+    <div class="card card-pad">
+        <div class="card-title">📅 Upcoming Due Dates</div>
+        {% if upcoming %}
+        <table><tbody>{% for i in upcoming %}{{ issue_row(i) }}{% endfor %}</tbody></table>
+        {% else %}<div class="empty">No upcoming deadlines.</div>{% endif %}
+    </div>
+</div>
+{% endblock %}

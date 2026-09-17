@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Issues — Ticketing{% endblock %}
+{% block page_title %}{{ filters.title if filters.title else 'Issues' }}{% endblock %}
+
+{% block content %}
+{% if not filters.title %}
+<form method="get" class="filters">
+    <input type="text" name="q" placeholder="Search…" value="{{ filters.q }}">
+    <select name="status"><option value="">All statuses</option>
+        {% for s in statuses %}<option value="{{ s }}" {% if filters.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select>
+    <select name="type"><option value="">All types</option>
+        {% for t in types %}<option value="{{ t }}" {% if filters.type==t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select>
+    <select name="priority"><option value="">All priorities</option>
+        {% for p in priorities %}<option value="{{ p }}" {% if filters.priority==p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+    </select>
+    <select name="project"><option value="">All projects</option>
+        {% for p in projects %}<option value="{{ p.id }}" {% if filters.project==p.id|string %}selected{% endif %}>{{ p.key }}</option>{% endfor %}
+    </select>
+    <select name="label"><option value="">All labels</option>
+        {% for l in labels %}<option value="{{ l.name }}" {% if filters.label==l.name %}selected{% endif %}>{{ l.name }}</option>{% endfor %}
+    </select>
+    <select name="sort">
+        <option value="created" {% if filters.sort=='created' %}selected{% endif %}>Sort: Created</option>
+        <option value="updated" {% if filters.sort=='updated' %}selected{% endif %}>Sort: Updated</option>
+        <option value="priority" {% if filters.sort=='priority' %}selected{% endif %}>Sort: Priority</option>
+        <option value="due" {% if filters.sort=='due' %}selected{% endif %}>Sort: Due date</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;">
+        <input type="checkbox" name="overdue" value="1" {% if filters.overdue %}checked{% endif %} style="width:auto;"> Overdue
+    </label>
+    <button class="btn btn-sm" type="submit">Apply</button>
+    <a class="btn btn-sm" href="{{ url_for('issues.list_issues') }}">Clear</a>
+</form>
+{% endif %}
+
+<div class="card">
+{% if issues %}
+<table>
+    <thead><tr>
+        <th>Key</th><th>Title</th><th>Type</th><th>Status</th><th>Priority</th>
+        <th>Project</th><th>Labels</th><th>Due</th>
+    </tr></thead>
+    <tbody>
+    {% for i in issues %}
+    <tr>
+        <td><a href="{{ url_for('issues.detail', issue_key=i.issue_key) }}" class="issue-key">{{ i.issue_key }}</a></td>
+        <td><a href="{{ url_for('issues.detail', issue_key=i.issue_key) }}">{{ i.title }}</a></td>
+        <td><span class="type-tag">{{ i.issue_type }}</span></td>
+        <td><span class="badge status-{{ i.status|replace(' ','-') }}">{{ i.status }}</span></td>
+        <td class="prio prio-{{ i.priority }}">{{ i.priority }}</td>
+        <td><span class="proj-key" style="background:var(--surface-2);color:var(--text-muted);">{{ i.project.key }}</span></td>
+        <td>{% for l in i.labels %}<span class="label-chip">{{ l.name }}</span>{% endfor %}</td>
+        <td>{% if i.due_date %}<span class="{% if now and i.due_date < now and i.status!='Done' %}overdue{% endif %}">{{ i.due_date.strftime('%b %d') }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty">No issues found. <a href="{{ url_for('issues.create') }}">Create one →</a></div>
+{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ticketing{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="layout">
+    <!-- Sidebar navigation -->
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-mark">◆</span>
+            <span class="brand-name">Ticketing</span>
+        </div>
+
+        <nav class="nav">
+            <a href="{{ url_for('main.dashboard') }}" class="nav-item {% if request.endpoint=='main.dashboard' %}active{% endif %}">
+                <span class="nav-ico">▤</span> Dashboard
+            </a>
+
+            <div class="nav-section">Projects</div>
+            {% set projects = projects if projects is defined else [] %}
+            <a href="{{ url_for('projects.list_projects') }}" class="nav-item {% if request.endpoint=='projects.list_projects' %}active{% endif %}">
+                <span class="nav-ico">▦</span> All Projects
+            </a>
+            {% for p in (projects or [])[:8] %}
+            <a href="{{ url_for('issues.list_issues', project=p.id) }}" class="nav-item nav-sub">
+                <span class="proj-key">{{ p.key }}</span> {{ p.name }}
+            </a>
+            {% endfor %}
+
+            <div class="nav-section">Work</div>
+            <a href="{{ url_for('issues.list_issues') }}" class="nav-item {% if request.endpoint=='issues.list_issues' %}active{% endif %}">
+                <span class="nav-ico">≣</span> Issues
+            </a>
+            <a href="{{ url_for('issues.my_issues') }}" class="nav-item {% if request.endpoint=='issues.my_issues' %}active{% endif %}">
+                <span class="nav-ico">☰</span> My Issues
+            </a>
+            <a href="{{ url_for('issues.backlog') }}" class="nav-item {% if request.endpoint=='issues.backlog' %}active{% endif %}">
+                <span class="nav-ico">⋮</span> Backlog
+            </a>
+            <a href="{{ url_for('issues.kanban') }}" class="nav-item {% if request.endpoint=='issues.kanban' %}active{% endif %}">
+                <span class="nav-ico">▥</span> Kanban
+            </a>
+            <a href="{{ url_for('main.reports') }}" class="nav-item {% if request.endpoint=='main.reports' %}active{% endif %}">
+                <span class="nav-ico">◔</span> Reports
+            </a>
+
+            <div class="nav-section">System</div>
+            <a href="{{ url_for('main.settings') }}" class="nav-item {% if request.endpoint=='main.settings' %}active{% endif %}">
+                <span class="nav-ico">⚙</span> Settings
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button id="theme-toggle" class="theme-toggle" title="Toggle theme">🌙 / ☀</button>
+            <span class="local-badge">● localhost only</span>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content">
+        <header class="topbar">
+            <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+            <div class="topbar-actions">
+                <form action="{{ url_for('issues.list_issues') }}" method="get" class="search-box">
+                    <input type="text" name="q" placeholder="Search issues…" value="{{ request.args.get('q','') }}">
+                </form>
+                <a href="{{ url_for('issues.create') }}" class="btn btn-primary">+ New Issue</a>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flashes">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
